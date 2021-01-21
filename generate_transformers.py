@@ -47,8 +47,11 @@ def open_the_document(Path):
     data = []
     with open(Path, encoding='UTF-8') as f:
         for i in f.readline():
-            if len(i) >= 1:
-                data.append(i[:-1])
+            if len(i) >= 2:
+                if i[-1] == '\n':
+                    data.append(i[:-1])
+                else:
+                    data.append(i)
     return data
 
 
