@@ -45,8 +45,8 @@ def write_in_the_document(Path, sample):
 
 def open_the_document(Path):
     data = []
-    with open(Path, encoding='UTF-8') as f:
-        for i in f.readline():
+    with open(Path, 'r', encoding='UTF-8') as f:
+        for i in f:
             if len(i) >= 2:
                 if i[-1] == '\n':
                     data.append(i[:-1])
