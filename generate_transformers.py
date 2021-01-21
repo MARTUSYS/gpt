@@ -67,13 +67,13 @@ def main():
 
     args = parser.parse_args()
 
-    args.device = environ.get('DEVICE', 'cuda:0')
+    device = environ.get('DEVICE', 'cuda:0')
     # args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     # args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
 
     tokenizer = GPT2Tokenizer.from_pretrained(args.model_name_or_path)
     model = GPT2LMHeadModel.from_pretrained(args.model_name_or_path)
-    model.to(args.device)
+    model.to(device)
 
     args.length = adjust_length_to_model(args.length, max_sequence_length=model.config.max_position_embeddings)
 
