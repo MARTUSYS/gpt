@@ -53,14 +53,8 @@ def open_the_document(Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model_name_or_path",
-        default=None,
-        type=str,
-        required=True,
-        help="Path to pre-trained model or shortcut name selected in the list",
-    )
-    parser.add_argument("--path_to_prompt", type=str, default="", required=True)
+    parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list")
+    parser.add_argument("--path_to_prompt", default="", type=str)
     parser.add_argument("--path_to_save_sample", default='', type=str, help="Path to save sample")
 
     parser.add_argument("--length", type=int, default=128)
