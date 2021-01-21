@@ -17,6 +17,7 @@
 """ Conditional text generation with the auto-regressive models of the library (GPT-2/GPT-3)
 """
 import os
+from os import environ
 
 import argparse
 import torch
@@ -59,9 +60,9 @@ def main():
         required=True,
         help="Path to pre-trained model or shortcut name selected in the list",
     )
+    parser.add_argument("--path_to_prompt", type=str, default="", required=True)
     parser.add_argument("--path_to_save_sample", default='', type=str, help="Path to save sample")
 
-    parser.add_argument("--path_to_prompt", type=str, default="")
     parser.add_argument("--length", type=int, default=128)
 
     parser.add_argument("--temperature", type=float, default=1.0, help="temperature of 1.0 has no effect, lower tend toward greedy sampling")
@@ -69,12 +70,13 @@ def main():
     parser.add_argument("--k", type=int, default=50)
     parser.add_argument("--p", type=float, default=0.9)
 
-    parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
+    # parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
 
     args = parser.parse_args()
 
-    args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+    args.device = environ.get('DEVICE', 'cuda:0')
+    # args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     # args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
 
     tokenizer = GPT2Tokenizer.from_pretrained(args.model_name_or_path)
@@ -111,7 +113,7 @@ def main():
             output_sequences.squeeze_()
 
         for generated_sequence_idx, generated_sequence in enumerate(output_sequences):
-            print("ruGPT:".format(generated_sequence_idx + 1))
+            # print("ruGPT:".format(generated_sequence_idx + 1))
             generated_sequence = generated_sequence.tolist()
 
             # Decode text
