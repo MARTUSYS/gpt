@@ -53,8 +53,8 @@ def open_the_document(Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name_or_path", default=None, type=str, help="Path to pre-trained model or shortcut name selected in the list")
-    parser.add_argument("--path_to_prompt", default="", type=str)
+    parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list")
+    parser.add_argument("--path_to_prompt", default="", type=str, required=True)
     parser.add_argument("--path_to_save_sample", default="", type=str, help="Path to save sample")
     parser.add_argument("--length", type=int, default=128)
     parser.add_argument("--temperature", type=float, default=1.0, help="temperature of 1.0 has no effect, lower tend toward greedy sampling")
@@ -87,7 +87,7 @@ def main():
 
     for prompt_text in prompts:
         encoded_prompt = tokenizer.encode(prompt_text, add_special_tokens=False, return_tensors="pt")
-        encoded_prompt = encoded_prompt.to(args.device)
+        encoded_prompt = encoded_prompt.to(device)
 
         output_sequences = model.generate(
             input_ids=encoded_prompt,
