@@ -48,7 +48,7 @@ def open_the_document(Path):
     with open(Path, encoding='UTF-8') as f:
         for i in f.readline():
             if len(i) >= 1:
-            data.append(i[:-1])
+                data.append(i[:-1])
     return data
 
 
