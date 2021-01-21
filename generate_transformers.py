@@ -55,10 +55,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list")
     parser.add_argument("--path_to_prompt", default="", type=str)
-    parser.add_argument("--path_to_save_sample", default='', type=str, help="Path to save sample")
-
+    parser.add_argument("--path_to_save_sample", action="store_true", default='', type=str, help="Path to save sample")
     parser.add_argument("--length", type=int, default=128)
-
     parser.add_argument("--temperature", type=float, default=1.0, help="temperature of 1.0 has no effect, lower tend toward greedy sampling")
     parser.add_argument("--repetition_penalty", type=float, default=1.0, help="primarily useful for CTRL model; in that case, use 1.2")
     parser.add_argument("--k", type=int, default=50)
