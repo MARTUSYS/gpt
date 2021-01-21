@@ -4,4 +4,4 @@
 
 Если не будет параметра --path_to_save_sample, то записи в файл не будет
 
-В colab.ipynb поазано как запустить в colab
+В colab.ipynb показано как запустить в colab
