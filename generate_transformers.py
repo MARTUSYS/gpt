@@ -17,7 +17,7 @@
 """ Conditional text generation with the auto-regressive models of the library (GPT-2/GPT-3)
 """
 import os
-from os import environ
+# from os import environ
 
 import argparse
 import torch
@@ -47,6 +47,7 @@ def open_the_document(Path):
     data = []
     with open(Path, encoding='UTF-8') as f:
         for i in f.readline():
+            if len(i) >= 1:
             data.append(i[:-1])
     return data
 
@@ -62,18 +63,18 @@ def main():
     parser.add_argument("--k", type=int, default=50)
     parser.add_argument("--p", type=float, default=0.9)
 
-    # parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
+    parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
 
     args = parser.parse_args()
 
-    device = environ.get('DEVICE', 'cuda:0')
-    # args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+    # device = environ.get('DEVICE', 'cuda:0')
+    args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     # args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
 
     tokenizer = GPT2Tokenizer.from_pretrained(args.model_name_or_path)
     model = GPT2LMHeadModel.from_pretrained(args.model_name_or_path)
-    model.to(device)
+    model.to(args.device)
 
     args.length = adjust_length_to_model(args.length, max_sequence_length=model.config.max_position_embeddings)
 
@@ -87,7 +88,7 @@ def main():
 
     for prompt_text in prompts:
         encoded_prompt = tokenizer.encode(prompt_text, add_special_tokens=False, return_tensors="pt")
-        encoded_prompt = encoded_prompt.to(device)
+        encoded_prompt = encoded_prompt.to(args.device)
 
         output_sequences = model.generate(
             input_ids=encoded_prompt,
