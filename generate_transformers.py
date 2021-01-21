@@ -52,7 +52,6 @@ def open_the_document(Path):
                     data.append(i[:-1])
                 else:
                     data.append(i)
-    print(data)
     return data
 
 
