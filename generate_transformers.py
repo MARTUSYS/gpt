@@ -25,6 +25,7 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 MAX_LENGTH = int(10000)  # Hardcoded max length to avoid infinite loop
 
+
 def adjust_length_to_model(length, max_sequence_length):
     if length < 0 and max_sequence_length > 0:
         length = max_sequence_length
@@ -35,12 +36,23 @@ def adjust_length_to_model(length, max_sequence_length):
     return length
 
 
-def write_in_the_document(Path, sample):
+def write_in_the_document(Path, prompts, sample, pruning=False):
     with open(Path, 'w', encoding='UTF-8') as f:
-        for i in sample:
-            for j in i:
-                f.write(j + '\n\n')
-            f.write('-' * 10 + '\n')
+        for i, j in zip(prompts, sample):
+            for h in j:
+                if pruning:
+                    for n in range(len(h) - 1):
+                        if h[n: n + 2] == '<p' or h[n] == '\n':  # Ненадежное условвие !!!!!!!!!!!!!!!!!!!! Убирает Текст после переноса на следующую строку
+                            N = n
+                            break
+                    else:
+                        N = len(h)
+                    f.write(h[len(i):N] + '\n')
+                    f.write(f"{'-' * 3}\n")
+                else:
+                    f.write(h + '\n')
+                    f.write(f"{'-' * 3}\n")
+            f.write(f"{'-' * 20}\n")
 
 
 def open_the_document(Path):
@@ -55,18 +67,42 @@ def open_the_document(Path):
     return data
 
 
+def print_sample(prompts, sample, pruning=False):
+    print('_' * 30)
+    for i, j in zip(prompts, sample):
+      for h in j:
+        if pruning:
+          for n in range(len(h) - 1):
+            if h[n: n + 2] == '<p' or h[n] == '\n': # Ненадежное условвие !!!!!!!!!!!!!!!!!!!! Убирает Текст после переноса на следующую строку
+              N = n
+              break
+          else:
+            N = len(h)
+          print(h[len(i):N])
+          print('-' * 3)
+        else:
+          print(h)
+          print('-' * 3)
+      print('-' * 20)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name_or_path", default=None, type=str, required=True, help="Path to pre-trained model or shortcut name selected in the list")
+    parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
+                        help="Path to pre-trained model or shortcut name selected in the list")
     parser.add_argument("--path_to_prompt", default="", type=str, required=True)
     parser.add_argument("--path_to_save_sample", default="", type=str, help="Path to save sample")
     parser.add_argument("--length", type=int, default=128)
-    parser.add_argument("--temperature", type=float, default=1.0, help="temperature of 1.0 has no effect, lower tend toward greedy sampling")
-    parser.add_argument("--repetition_penalty", type=float, default=1.0, help="primarily useful for CTRL model; in that case, use 1.2")
+    parser.add_argument("--temperature", type=float, default=1.0,
+                        help="temperature of 1.0 has no effect, lower tend toward greedy sampling")
+    parser.add_argument("--repetition_penalty", type=float, default=1.0,
+                        help="primarily useful for CTRL model; in that case, use 1.2")
     parser.add_argument("--k", type=int, default=50)
     parser.add_argument("--p", type=float, default=0.9)
 
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
+    parser.add_argument("--pruning", action="store_true",
+                        help="Trimming the beginning of a sentence and gaps at the end.")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
 
     args = parser.parse_args()
@@ -108,6 +144,8 @@ def main():
         if len(output_sequences.shape) > 2:
             output_sequences.squeeze_()
 
+        generated_sequences.append([])
+
         for generated_sequence_idx, generated_sequence in enumerate(output_sequences):
             # print("ruGPT:".format(generated_sequence_idx + 1))
             generated_sequence = generated_sequence.tolist()
@@ -117,25 +155,20 @@ def main():
 
             # Add the prompt at the beginning of the sequence. Remove the excess text that was used for pre-processing
             total_sequence = (
-                prompt_text + text[len(tokenizer.decode(encoded_prompt[0], clean_up_tokenization_spaces=True)) :]
+                    prompt_text + text[len(tokenizer.decode(encoded_prompt[0], clean_up_tokenization_spaces=True)):]
             )
 
-            generated_sequences.append(total_sequence)
+            generated_sequences[-1].append(total_sequence)
             # os.system('clear')
 
         # prompt_text = ""
         # if args.prompt:
         #     break
 
-
-    for i in generated_sequences:
-        print(i)
-        print('-' * 3)
-    print('-' * 20)
-
+    print_sample(prompts, generated_sequences, args.pruning)
 
     if args.path_to_save_sample != '':
-        write_in_the_document(args.path_to_save_sample, generated_sequences)
+        write_in_the_document(args.path_to_save_sample, prompts, generated_sequences, args.pruning)
 
     return generated_sequences
 

@@ -1,9 +1,9 @@
-Программа генерирует текст из контекста документа --path_to_prompt (1 линия - 1 генерация) и печетает, и сочраняет доумент --path_to_save_sample
+The program generates text from the document context --path_to_prompt (1 line - 1 generation) and prints and combines the document --path_to_save_sample
 
-Необходимые библиотеки в requirements.txt
+Required libraries in requirements.txt
 
-Скрипт запуска generate_ruGPT3Medium.sh
+Generate_ruGPT3Medium.sh startup script
 
-Если не будет параметра --path_to_save_sample, то записи в файл не будет
+If there is no parameter --path_to_save_sample, then there will be no writing to the file
 
-В colab.ipynb показано как запустить в colab
+Colab.ipynb shows how to run in colab
