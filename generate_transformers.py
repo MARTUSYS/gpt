@@ -36,26 +36,36 @@ def adjust_length_to_model(length, max_sequence_length):
     return length
 
 
+def preprocessing(prompts, sample, pruning=False, file=None):
+    for i, j in zip(prompts, sample):
+        print(i, file=file)
+        print(file=file)
+        for h in j:
+            if pruning:
+                for n in range(len(h) - 1):
+                    if h[n: n + 2] == '<p' or h[n] == '\n':
+                        N = n
+                        break
+                else:
+                    N = len(h)
+                print(h[len(i):N], file=file)
+            else:
+                print(h, file=file)
+            # print(file=file)
+        print('-' * 20, file=file)
+
+
 def write_in_the_document(Path, prompts, sample, pruning=False):
     with open(Path, 'w', encoding='UTF-8') as f:
-        for i, j in zip(prompts, sample):
-            for h in j:
-                if pruning:
-                    for n in range(len(h) - 1):
-                        if h[n: n + 2] == '<p' or h[n] == '\n':  # Ненадежное условвие !!!!!!!!!!!!!!!!!!!! Убирает Текст после переноса на следующую строку
-                            N = n
-                            break
-                    else:
-                        N = len(h)
-                    f.write(h[len(i):N] + '\n')
-                    f.write(f"{'-' * 3}\n")
-                else:
-                    f.write(h + '\n')
-                    f.write(f"{'-' * 3}\n")
-            f.write(f"{'-' * 20}\n")
+        preprocessing(prompts, sample, pruning=pruning, file=f)
 
 
-def open_the_document(Path):
+def print_sample(prompts, sample, pruning=False):
+    print('_' * 30)
+    preprocessing(prompts, sample, pruning=pruning)
+
+
+def open_the_document(Path, max_length=None):
     data = []
     with open(Path, 'r', encoding='UTF-8') as f:
         for i in f:
@@ -64,26 +74,14 @@ def open_the_document(Path):
                     data.append(i[:-1])
                 else:
                     data.append(i)
+
+    if max_length is not None:
+        for i in range(len(data)):
+            n = data[i].split(' ')
+            if len(n) > max_length:
+                data[i] = ' '.join(n[:max_length])
+                data[i] += ' => '
     return data
-
-
-def print_sample(prompts, sample, pruning=False):
-    print('_' * 30)
-    for i, j in zip(prompts, sample):
-      for h in j:
-        if pruning:
-          for n in range(len(h) - 1):
-            if h[n: n + 2] == '<p' or h[n] == '\n': # Ненадежное условвие !!!!!!!!!!!!!!!!!!!! Убирает Текст после переноса на следующую строку
-              N = n
-              break
-          else:
-            N = len(h)
-          print(h[len(i):N])
-          print('-' * 3)
-        else:
-          print(h)
-          print('-' * 3)
-      print('-' * 20)
 
 
 def main():
@@ -98,6 +96,7 @@ def main():
     parser.add_argument("--repetition_penalty", type=float, default=1.0,
                         help="primarily useful for CTRL model; in that case, use 1.2")
     parser.add_argument("--k", type=int, default=50)
+    parser.add_argument("--max_input_length", type=int, default=None)
     parser.add_argument("--p", type=float, default=0.9)
 
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
@@ -118,12 +117,7 @@ def main():
     args.length = adjust_length_to_model(args.length, max_sequence_length=model.config.max_position_embeddings)
 
     generated_sequences = []
-    # prompt_text = ""
-
-    # while prompt_text != "stop":
-    #     while not len(prompt_text):
-    #         prompt_text = args.prompt if args.prompt else input("Context >>> ")
-    prompts = open_the_document(args.path_to_prompt)
+    prompts = open_the_document(args.path_to_prompt, args.max_input_length)
 
     for prompt_text in prompts:
         encoded_prompt = tokenizer.encode(prompt_text, add_special_tokens=False, return_tensors="pt")
@@ -159,11 +153,6 @@ def main():
             )
 
             generated_sequences[-1].append(total_sequence)
-            # os.system('clear')
-
-        # prompt_text = ""
-        # if args.prompt:
-        #     break
 
     print_sample(prompts, generated_sequences, args.pruning)
 
