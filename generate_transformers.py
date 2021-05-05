@@ -22,6 +22,7 @@ import os
 import argparse
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from apex import amp
 
 MAX_LENGTH = int(10000)  # Hardcoded max length to avoid infinite loop
 
@@ -80,7 +81,7 @@ def open_the_document(Path, max_length=None):
             n = data[i].split(' ')
             if len(n) > max_length:
                 data[i] = ' '.join(n[:max_length])
-                data[i] += ' => '
+                data[i] += '. => '
     return data
 
 
@@ -103,6 +104,7 @@ def main():
     parser.add_argument("--pruning", action="store_true",
                         help="Trimming the beginning of a sentence and gaps at the end.")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
+    parser.add_argument("--fp16", action="store_true", help="fp16")
 
     args = parser.parse_args()
 
@@ -113,6 +115,8 @@ def main():
     tokenizer = GPT2Tokenizer.from_pretrained(args.model_name_or_path)
     model = GPT2LMHeadModel.from_pretrained(args.model_name_or_path)
     model.to(args.device)
+    if args.fp16:
+        model = amp.initialize(model, opt_level="O1")
 
     args.length = adjust_length_to_model(args.length, max_sequence_length=model.config.max_position_embeddings)
 
