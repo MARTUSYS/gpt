@@ -11,6 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 from apex import amp
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model_names = ['Bert_ru_512_title.bin', 'Bert_ru_512_descr.bin']
 
 
 def KMP(t, s):
@@ -105,7 +106,7 @@ def get_predictions(model, data_loader):
     model.eval()
     predictions = []
     with torch.no_grad():
-        for d in tqdm(data_loader):
+        for d in data_loader:
             input_ids = d["input_ids"].to(device)
             attention_mask = d["attention_mask"].to(device)
             y_pred = model(
@@ -148,11 +149,11 @@ def main():
     for i in range(len(names)):
         a = names[i].split("/")[-1][:-4]
         if KMP(a, 'title') != -1:
-            names[i] = f'<container type="title" model="{a}">\n'
+            names[i] = [f'<container type="title" model="{a}">\n', 0]  # [container, № model]
         elif KMP(a, 'text') != -1:
-            names[i] = f'<container type="text" model="{a}">\n'
+            names[i] = [f'<container type="text" model="{a}">\n', 2]  # not
         else:
-            names[i] = f'<container type="description" model="{a}">\n'
+            names[i] = [f'<container type="description" model="{a}">\n', 1]
 
     with open(f'{rss_input}/rss_links.txt', 'r', encoding='UTF-8') as f:
         links = f.readlines()
@@ -169,18 +170,20 @@ def main():
         )
 
         if args.definition_of_quality:
+            model = []
             tokenizer = BertTokenizer.from_pretrained('DeepPavlov/rubert-base-cased-sentence')
-            model = SentimentClassifier()
-            model.load_state_dict(torch.load(f'{rss_input}/Bert_ru.bin'))
-            model.to(device)
-            model = amp.initialize(model, opt_level="O1")
+            for model_name in model_names:
+                model.append(SentimentClassifier())
+                model[-1].load_state_dict(torch.load(f'{rss_input}/{model_name}'))
+                model[-1].to(device)
+                model[-1] = amp.initialize(model[-1], opt_level="O1")
 
-        for l_d in range(0, len(data[0]), len_data):
+        for l_d in tqdm(range(0, len(data[0]), len_data)):
             f.write('<item>\n')
             f.write(f'<link>{links[(l_d + 1) // len_data][:-1]}</link>\n')
             f.write(f'<yandex:full-text>{data[0][l_d][:-4]}</yandex:full-text>\n')
             for d in range(len(data)):
-                f.write(names[d])  # container
+                f.write(names[d][0])  # container
                 if args.definition_of_quality:
                     list_candidates = []
                     for l_d_item in range(l_d + 2, l_d + len_data - 1):  # +2 компенсация 'title', -1 компенсация '----'
@@ -190,7 +193,7 @@ def main():
                     list_candidates = pd.DataFrame({'x': list_candidates})
                     list_candidates['x'] = list_candidates['x'] + '\t' + data[0][l_d][:-4]
                     test_data_loader = create_data_loader_val(list_candidates, tokenizer, args.max_len, list_length)
-                    y_pred = get_predictions(model, test_data_loader)
+                    y_pred = get_predictions(model[names[d][1]], test_data_loader)
                 a = 0
                 for l_d_item in range(l_d + 2, l_d + len_data - 1):  # +2 компенсация 'title', -1 компенсация '----'
                     if args.definition_of_quality:
