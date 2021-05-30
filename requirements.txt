@@ -5,12 +5,9 @@ sentencepiece>=0.1.8
 tqdm>=4.60.0
 beautifulsoup4>=4.9.3
 tensorflow-gpu>=1.12.0
-torch==1.8.1+cu101
-torchvision==0.9.1+cu101
+torch==1.8.1
+torchvision==0.9.1
 torchaudio===0.8.1
 boto3==1.11.11
 regex==2020.1.8
 transformers==4.6.0
-uvicorn>=0.13.4
-fastapi>=0.65.1
-pydantic>=1.8.2
