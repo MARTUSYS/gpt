@@ -37,33 +37,23 @@ def adjust_length_to_model(length, max_sequence_length):
     return length
 
 
-def preprocessing(prompts, sample, pruning=False, file=None):
-    for i, j in zip(prompts, sample):
-        print(i, file=file)
+def preprocessing(prompts, samples, file=None):
+    for prompt, list_sample in zip(prompts, samples):
+        print(prompt, file=file)
         print(file=file)
-        for h in j:
-            if pruning:
-                for n in range(len(h) - 1):
-                    if h[n: n + 2] == '<p' or h[n] == '\n':
-                        N = n
-                        break
-                else:
-                    N = len(h)
-                print(h[len(i):N], file=file)
-            else:
-                print(h, file=file)
-            # print(file=file)
+        for sample in list_sample:
+            print(sample, file=file)
         print('-' * 20, file=file)
 
 
-def write_in_the_document(Path, prompts, sample, pruning=False):
+def write_in_the_document(Path, prompts, sample):
     with open(Path, 'w', encoding='UTF-8') as f:
-        preprocessing(prompts, sample, pruning=pruning, file=f)
+        preprocessing(prompts, sample, file=f)
 
 
-def print_sample(prompts, sample, pruning=False):
+def print_sample(prompts, sample):
     print('_' * 30)
-    preprocessing(prompts, sample, pruning=pruning)
+    preprocessing(prompts, sample)
 
 
 def open_the_document(Path, max_length=None):
@@ -101,8 +91,6 @@ def main():
     parser.add_argument("--p", type=float, default=0.9)
 
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
-    parser.add_argument("--pruning", action="store_true",
-                        help="Trimming the beginning of a sentence and gaps at the end.")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
     parser.add_argument("--fp16", action="store_true", help="fp16")
 
@@ -153,15 +141,15 @@ def main():
 
             # Add the prompt at the beginning of the sequence. Remove the excess text that was used for pre-processing
             total_sequence = (
-                    prompt_text + text[len(tokenizer.decode(encoded_prompt[0], clean_up_tokenization_spaces=True)):]
+                    # prompt_text +
+                    text[len(tokenizer.decode(encoded_prompt[0], clean_up_tokenization_spaces=True)):]
             )
+            generated_sequences[-1].append(total_sequence.split('<pad>', maxsplit=1)[0].split('\n', maxsplit=1)[0])
 
-            generated_sequences[-1].append(total_sequence)
-
-    print_sample(prompts, generated_sequences, args.pruning)
+    print_sample(prompts, generated_sequences)
 
     if args.path_to_save_sample != '':
-        write_in_the_document(args.path_to_save_sample, prompts, generated_sequences, args.pruning)
+        write_in_the_document(args.path_to_save_sample, prompts, generated_sequences)
 
     return generated_sequences
 

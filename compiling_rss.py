@@ -128,6 +128,7 @@ def main():
     parser.add_argument("--len_data", default=5, type=int)
     parser.add_argument("--max_len", default=256, type=int)
     parser.add_argument("--definition_of_quality", action="store_true")
+    parser.add_argument("--fp16", action="store_true", help="fp16")
 
     args = parser.parse_args()
 
@@ -176,7 +177,8 @@ def main():
                 model.append(SentimentClassifier())
                 model[-1].load_state_dict(torch.load(f'{rss_input}/{model_name}'))
                 model[-1].to(device)
-                model[-1] = amp.initialize(model[-1], opt_level="O1")
+                if args.fp16:
+                    model[-1] = amp.initialize(model[-1], opt_level="O1")
 
         for l_d in tqdm(range(0, len(data[0]), len_data)):
             f.write('<item>\n')
