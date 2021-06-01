@@ -91,6 +91,7 @@ def main():
     parser.add_argument("--p", type=float, default=0.9)
 
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
+    parser.add_argument("--quantization", action="store_true", help="Acceleration of generation, may degrade quality")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
     parser.add_argument("--fp16", action="store_true", help="fp16")
 
@@ -102,7 +103,12 @@ def main():
 
     tokenizer = GPT2Tokenizer.from_pretrained(args.model_name_or_path)
     model = GPT2LMHeadModel.from_pretrained(args.model_name_or_path)
+    model.eval()
     model.to(args.device)
+    if args.quantization:
+        model = torch.quantization.quantize_dynamic(
+            model, {torch.nn.Linear}, dtype=torch.qint8)
+
     if args.fp16:
         model = amp.initialize(model, opt_level="O1")
 
