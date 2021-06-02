@@ -94,6 +94,8 @@ def main():
     parser.add_argument("--quantization", action="store_true", help="Acceleration of generation, may degrade quality")
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
     parser.add_argument("--fp16", action="store_true", help="fp16")
+    parser.add_argument("--num_beams", type=int, default=1)
+    parser.add_argument("--early_stopping", action="store_true", help="fp16")
 
     args = parser.parse_args()
 
@@ -130,6 +132,8 @@ def main():
             repetition_penalty=args.repetition_penalty,
             do_sample=True,
             num_return_sequences=args.num_return_sequences,
+            num_beams=args.num_beams,
+            early_stopping=args.early_stopping
         )
 
         # Remove the batch dimension when returning multiple sequences
