@@ -30,18 +30,19 @@ def strip_tags(html):
     return s.get_data()
 
 
-def process_review(review, http_filter=True):
-    review = re.sub('"', "'", review)
-
-    review = re.sub(r'<.*?>', ' ', review)
-    review = re.sub(r"<[^>]+>|&nbsp;", '', review)
-    review = strip_tags(review)
+def process_text(text, http_filter=True, filter_text=True):
+    if filter_text:
+        text = re.sub('"', "'", text)
+        text = re.sub(r'<.*?>', ' ', text)
+        text = re.sub(r"<[^>]+>|&nbsp;", '', text)
+        text = strip_tags(text)
     if http_filter:
-        review = re.sub(r'https?://\S+|www\.\S+', '', review)
-    # review = re.sub(r'\w*\d\w*', ' ', review)  # Удаление цифр
+        text = re.sub(r'https?://\S+|www\.\S+', '', text)
+        text = '. '.join([i for i in text.split('.')])
 
-    review = re.sub(r"\s+", ' ', review)  # Удаление лишних пробелов # Проболы, табуляция, переносы
-    return review
+    # review = re.sub(r'\w*\d\w*', ' ', review)  # Удаление цифр
+    text = re.sub(r"\s+", ' ', text)  # Удаление лишних пробелов # Проболы, табуляция, переносы
+    return text
 
 
 def parser_rss(url):
@@ -56,7 +57,7 @@ def parser_rss(url):
         text = []
         for item in items:
             try:
-                text1 = process_review(data[i].select(item)[0].text, http_filter=False)
+                text1 = process_text(data[i].select(item)[0].text, http_filter=False)
             except:
                 text1 = 'None'
             text.append(text1)
@@ -89,7 +90,7 @@ def parser_news(url, fl, add_title=True):
 
     for new in news:  # [:-2]
         n += new.text + ' '
-    a, b = process_review(title), process_review(f"{d} {n}")
+    a, b = process_text(title), process_text(f"{d} {n}")
     return a, re.sub(a, "", b)
 
 
@@ -132,10 +133,10 @@ def main():
                     n = name.split()
                     for i in d:
                         if n[0] == '+':
-                            print(re.sub(r'https?://\S+|www\.\S+', '', f'{i[0]} {i[-1]}=>'), file=f)
+                            print(process_text(f'{i[0]} {i[-1]} =>', filter_text=False), file=f)
                             print(i[-2], file=f1)
                         elif n[0] == '+(descr)':
-                            print(re.sub(r'https?://\S+|www\.\S+', '', f'{i[0]} {i[1]}=>'), file=f)
+                            print(process_text(f'{i[0]} {i[1]} =>', filter_text=False), file=f)
                             print(i[-2], file=f1)
                         elif n[0] == '-':
                             try:
@@ -155,10 +156,10 @@ def main():
                     n = name.split()
                     for i in d:
                         if n[0] == '+':
-                            print(re.sub(r'https?://\S+|www\.\S+', '', f'{i[-1]}=>'), file=f)
+                            print(process_text(f'{i[-1]} =>', filter_text=False), file=f)
                             print(i[-2], file=f1)
                         elif n[0] == '+(descr)':
-                            print(re.sub(r'https?://\S+|www\.\S+', '', f'{i[1]}=>'), file=f)
+                            print(process_text(f'{i[1]} =>', filter_text=False), file=f)
                             print(i[-2], file=f1)
                         elif n[0] == '-':
                             try:

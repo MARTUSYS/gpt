@@ -70,8 +70,13 @@ def open_the_document(Path, max_length=None):
         for i in range(len(data)):
             n = data[i].split(' ')
             if len(n) > max_length:
-                data[i] = ' '.join(n[:max_length])
-                data[i] += '. => '
+                while True:
+                    g = data[i].split('. ')
+                    data[i] = '. '.join(g[:-1])
+                    if max_length > len(data[i].split(' ')):
+                        break
+                # data[i] = ' '.join(n[:max_length])
+                data[i] += ' =>'
     return data
 
 
@@ -95,7 +100,7 @@ def main():
     parser.add_argument("--num_return_sequences", type=int, default=1, help="The number of samples to generate.")
     parser.add_argument("--fp16", action="store_true", help="fp16")
     parser.add_argument("--num_beams", type=int, default=1)
-    parser.add_argument("--early_stopping", action="store_true", help="fp16")
+    parser.add_argument("--early_stopping", action="store_true")
 
     args = parser.parse_args()
 
